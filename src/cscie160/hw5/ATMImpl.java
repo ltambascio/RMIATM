@@ -18,7 +18,7 @@ public class ATMImpl extends UnicastRemoteObject implements ATM
 	private HashMap<Integer,Account> accounts;
 
 	/**
-	 * No arg constructor.
+	 * No arg constructor that creates test accounts to operate upon.
 	 * 
 	 * @throws	RemoteException		Potentially thrown by parent class
 	 */

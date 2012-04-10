@@ -46,17 +46,11 @@
   
   <target name="test" depends="dist"
   		description="Run the JUnit tests">
-  	<!-- Start the server process, spawning into a separate process -->
-  	<java classname="cscie160.hw4.Server" fork="true" spawn="true"
-  			classpath="${dist}/lib/HW4.jar">
-  		<arg value="7777"/>
-  	</java>
-  	
   	<mkdir dir="${build}/reports"/>
   	<junit printsummary="yes" showoutput="yes">
   		<classpath>
   			<pathelement location="${lib}/junit-4.1.jar"/>
-  			<pathelement location="${dist}/lib/HW4.jar"/>
+  			<pathelement location="${dist}/lib/HW5.jar"/>
   		</classpath>
   		<formatter type="plain"/>
   		<batchtest toDir="${build}/reports">
@@ -64,9 +58,27 @@
   		</batchtest>
   	</junit>
   </target>
+	
+  <target name="demo" depends="dist"
+  		description="runs client to demonstrate behavior">
+  	<!-- First start the rmiregistry process -->
+  	<exec executable="rmiregistry" spawn="true">
+  		<arg value="-J-cp"/>
+  		<arg value="-J${dist}/lib/HW5.jar"/>
+  	</exec>
+  	
+  	<!-- Now start the server process -->
+  	<java classname="cscie160.hw5.Server" 
+  			classpath="${dist}/lib/HW5.jar">
+  	</java>
+  	
+  	<!-- Now run the client class -->
+  	<java classname="cscie160.hw5.Client" classpath="${dist}/lib/HW5.jar"/>
+  	
+  </target>
 
   <target name="clean"
-        description="clean up" >
+        description="clean up">
     <!-- Delete the ${build} and ${dist} directory trees -->
     <delete dir="${build}"/>
     <delete dir="${dist}"/>

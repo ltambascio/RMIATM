@@ -4,7 +4,7 @@ package cscie160.hw5;
  * Account class for the ATM homework assignment
  * 
  * @author Larry Tambascio
- * @version 1.0
+ * @version 1.1
  */
 public class Account
 {

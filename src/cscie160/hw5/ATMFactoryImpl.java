@@ -7,6 +7,8 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 /**
+ * Remote implementation class for the ATM factory, it will create and bind an
+ * instance of the ATMImpl class.
  * 
  * @author	Larry Tambascio
  * @version 1.0
@@ -14,6 +16,12 @@ import java.rmi.server.UnicastRemoteObject;
 public class ATMFactoryImpl extends UnicastRemoteObject implements ATMFactory
 {
 
+	/**
+	 * No arg constructor required by UnicastRemoteObject.  This method binds 
+	 * an instance of the ATMImpl class to be returned by the getATM method.
+	 * 
+	 * @throws RemoteException	Required as an RMI object
+	 */
 	protected ATMFactoryImpl() throws RemoteException
 	{
 		super();

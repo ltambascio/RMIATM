@@ -1,0 +1,103 @@
+HW 5 Design:
+
+Overview:
+	The purpose of this assignment was to create an RMI based version of the 
+ATM from the previous assignment.  In addition to making it RMI based, it will
+support more than one account.  This required a change to the Account class to
+accept an account number as the first parameter in each method.  A factory class
+was used to instantiate the ATM.  The client will only need to lookup the 
+factory, and the factory will return an ATM instance.
+
+Design:
+
+Class:	cscie160.hw5.Account
+	This class has not functionally changed from the previous assignment.  The 
+package changed.  It is still a simple bean with a single balance property that
+represents one account.
+
+
+Interface:	cscie160.hw5.ATM
+	This remote interface defines the operations an ATM could perform (deposit, 
+withdraw, and get deposit).  Each method needed to have an account number 
+parameter added to differentiate between different accounts.  The interface also
+has to extend java.rmi.Remote now.
+
+
+Class:	cscie160.hw5.ATMImpl
+	This class is the remote implementation of the ATM interface.  It extends
+UnicastRemoteObject.  It has a HashMap of Account objects, where the integer
+account number is the key.
+
+Method: Constructor
+	In addition to calling the parent constructor, the constructor also 
+populates the HashMap with the initial values specified in the assignment.
+
+Method: deposit (int acctNum, float amount)
+	This method retrieves the account referenced and adds the amount specified
+to the balance of that account.
+
+Method: withdraw (int acctNum, float amount)
+	This method retrieves the account referenced and subtracts the amount 
+specified from the balance of that account.
+
+Method: getBalance (int acctNum)
+	This method returns the balance of the referenced account.
+
+
+Interface:	cscie160.hw5.ATMFactory
+	This remote interface extends java.rmi.Remote and it has one method (getATM)
+that returns a remote reference to an ATM object.
+
+
+Class:	cscie160.hw5.ATMFactoryImpl
+
+Method: Constructor
+	The no arg constructor binds a reference of a remote ATM object to 
+"//localhost/atm".
+
+Method: getATM
+	This method does a lookup for the remote ATM object and returns it.
+
+
+Class:	cscie160.hw5.Server
+	The Server class is a simple command line that binds the ATMFactory class so
+that the client can get a reference to it, and then get a reference to a remote
+ATM instace.
+
+
+Class:	cscie160.hw5.AccountTest
+	This class has two test methods that test getting the balance and setting 
+the balance.
+
+Method:	testGetBalance
+	This method first validates that it initially gets the correct initial 
+balance of zero.  The balance is then updated to a different known value, and
+then we validate that getBalance returns that known value.
+
+Method:	testSetBalance
+	This method sets the balance to a known value, and then uses getBalance to
+validate that it was set correctly.
+
+
+Class:	cscie160.hw5.ATMImplTest
+	This class has two methods to test the ATMImpl class.  In testing the 
+deposit and withdraw operations, we also rely on the get balance method, so that
+is tested with the other two operations.
+
+Method: testDeposit
+	This method tests both the deposit and get balance methods of the ATMImpl 
+class.
+
+Method:	testWithdraw
+	This method tests both the withdraw and get balance methods of the ATMImpl 
+class.
+
+
+Submission Notes:
+	I only wrote JUnit tests for the Account class and the ATMImpl class.  The
+server class does not need to be running anymore for the tests to work.  I kept
+the ant script from before, but added a demo target.  The demo target will spawn 
+off the rmiregistry process, run the Server class, and then run the client
+class.  If you run the demo target, you won't be able to subsequently run the 
+clean target since the rmiregistry process will have a hold on the HW5.jar.  If
+you kill that process, then you'll be able to run the clean target again.

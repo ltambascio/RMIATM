@@ -2,11 +2,19 @@ package cscie160.hw5;
 
 import java.rmi.Naming;
 
+/**
+ * Server class that creates and binds ATMFactory instance
+ * 
+ * @author	Larry Tambascio
+ * @version	1.1
+ */
 public class Server
 {
 
 	/**
-	 * @param args
+	 * Server class that instantiates an ATMFactory instance.
+	 * 
+	 * @param args No command line parameters required.
 	 */
 	public static void main(String[] args)
 	{
