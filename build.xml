@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="atm" default="dist" basedir=".">
     <description>
-        CSCIE160 Homework 5 - ATM
+        CSCIE160 Final Project - ATM
     </description>
   <!-- set global properties for this build -->
   <property name="src" location="src"/>
@@ -28,7 +28,7 @@
     </javac>
     
     <javadoc destdir="${apidocs}" author="true" version="true" 
-    		windowtitle="CSCIE160 HW5 ATM">
+    		windowtitle="CSCIE160 Final Project ATM">
     	<sourcepath>
     		<pathelement location="${src}"/>
     	</sourcepath>
@@ -41,7 +41,7 @@
     <mkdir dir="${dist}/lib"/>
 
     <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
-    <jar jarfile="${dist}/lib/HW5.jar" basedir="${build}"/>
+    <jar jarfile="${dist}/lib/project.jar" basedir="${build}"/>
   </target>
   
   <target name="test" depends="dist"
@@ -50,7 +50,7 @@
   	<junit printsummary="yes" showoutput="yes">
   		<classpath>
   			<pathelement location="${lib}/junit-4.1.jar"/>
-  			<pathelement location="${dist}/lib/HW5.jar"/>
+  			<pathelement location="${dist}/lib/project.jar"/>
   		</classpath>
   		<formatter type="plain"/>
   		<batchtest toDir="${build}/reports">
@@ -64,7 +64,7 @@
   	<!-- First start the rmiregistry process -->
   	<exec executable="rmiregistry" spawn="true">
   		<arg value="-J-cp"/>
-  		<arg value="-J${dist}/lib/HW5.jar"/>
+  		<arg value="-J${dist}/lib/project.jar"/>
   	</exec>
   	
   	<!-- Now start the server process -->

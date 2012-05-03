@@ -1,4 +1,4 @@
-package cscie160.hw5;
+package cscie160.project;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

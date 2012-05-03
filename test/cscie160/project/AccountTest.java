@@ -1,9 +1,11 @@
-package cscie160.hw5;
+package cscie160.project;
 
 import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import cscie160.project.Account;
 
 /**
  * Test the Account class.

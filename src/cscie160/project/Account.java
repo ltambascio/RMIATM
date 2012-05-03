@@ -1,4 +1,4 @@
-package cscie160.hw5;
+package cscie160.project;
 
 /**
  * Account class for the ATM homework assignment
