@@ -44,7 +44,7 @@
     <jar jarfile="${dist}/lib/project.jar" basedir="${build}"/>
   </target>
   
-  <target name="test" depends="dist"
+  <target name="test" depends="startregserv"
   		description="Run the JUnit tests">
   	<mkdir dir="${build}/reports"/>
   	<junit printsummary="yes" showoutput="yes">
@@ -59,22 +59,18 @@
   	</junit>
   </target>
 	
-  <target name="demo" depends="dist"
-  		description="runs client to demonstrate behavior">
+  <target name="startregserv" depends="dist"
+  		description="starts up the rmiregistry and BankServer processes for testing">
   	<!-- First start the rmiregistry process -->
   	<exec executable="rmiregistry" spawn="true">
   		<arg value="-J-cp"/>
   		<arg value="-J${dist}/lib/project.jar"/>
   	</exec>
   	
-  	<!-- Now start the server process -->
-  	<java classname="cscie160.hw5.Server" 
-  			classpath="${dist}/lib/HW5.jar">
+  	<!-- Start the bank server process -->
+  	<java classname="cscie160.project.BankServer" fork="true" spawn="true" 
+  			classpath="${dist}/lib/project.jar">
   	</java>
-  	
-  	<!-- Now run the client class -->
-  	<java classname="cscie160.hw5.Client" classpath="${dist}/lib/HW5.jar"/>
-  	
   </target>
 
   <target name="clean"

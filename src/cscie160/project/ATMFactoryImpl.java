@@ -32,7 +32,7 @@ public class ATMFactoryImpl extends UnicastRemoteObject implements ATMFactory
 		}
 		catch (Exception e) 
 		{
-			System.out.println("ATM err: " + e.getMessage());
+			System.out.println("ATMFactory err: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}

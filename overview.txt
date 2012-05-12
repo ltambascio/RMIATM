@@ -1,55 +1,138 @@
-HW 5 Design:
+Final Project Design:
 
 Overview:
-	The purpose of this assignment was to create an RMI based version of the 
-ATM from the previous assignment.  In addition to making it RMI based, it will
-support more than one account.  This required a change to the Account class to
-accept an account number as the first parameter in each method.  A factory class
-was used to instantiate the ATM.  The client will only need to lookup the 
-factory, and the factory will return an ATM instance.
+	The purpose of this assignment was to create a more complete RMI based 
+version of the ATM from previous assignments.  This version includes the concept
+of Bank and Security services.  The bank service will actually update the 
+accounts, and the security service will handle authentication and authorization.
+Additionally, ATM clients should register themselves with the ATM service.  This
+will allow them all to be notified for each transaction.  This is not intended 
+to synchronize transactions.
+
+
+Submission Notes:
+	I only wrote JUnit tests for the Account class and the ATMImpl class.  The
+BankServer class does need to be running for the ATMImpl tests to work.  The ant
+script has no demo target, but it does have a test target that will run the two
+tests.  After running the "ant clean dist" command, you should first start the
+rmiregistry process, the BankServer process, then the Server process.  The 
+classpath for all these processes (and the client too) is dist/lib/project.jar 
+from the project home directory.  The output for the Server process will have 
+some valuable output.  The BankServer has some output as well, but it is not
+terribly interesting.
 
 Design:
 
-Class:	cscie160.hw5.Account
-	This class has not functionally changed from the previous assignment.  The 
-package changed.  It is still a simple bean with a single balance property that
-represents one account.
+Class:	cscie160.project.Account
+	I decided to change the Account class for this assignment.  Where as before
+there were only methods to set and get the balance, now it has deposit, 
+withdraw, and get balance methods.  The withdraw method does validate that the
+account has sufficient funds to accommodate the withdrawal.  If it does not, it
+throws the appropriate exception.
 
 
-Interface:	cscie160.hw5.ATM
+Class:	cscie160.project.AccountInfo
+	The AccountInfo class is an immutable object that encapsulates the account
+number and PIN.  Those values are required for the constructor, and they cannot
+be changed.  There are methods to get those values from the object, and there is
+a toString method as well.  This object is also marked as Serializable so that 
+it can be passed as a parameter to remote objects.
+
+
+Class:	cscie160.project.AccountAuthorization
+	This class is used to help define the operations that are authorized for a
+given account.  It maintains three boolean member variables to indicate whether
+deposits, withdrawals, and balance requests are allowed.
+
+
+Interface:	cscie160.project.ATM
 	This remote interface defines the operations an ATM could perform (deposit, 
-withdraw, and get deposit).  Each method needed to have an account number 
-parameter added to differentiate between different accounts.  The interface also
-has to extend java.rmi.Remote now.
+withdraw, and get balance).  Each method now requires an AccountInfo object
+parameter so the methods know which account to operate on and so the PIN for the
+account can be validated.  With this version of the interface, a new method was
+added to notify clients of impending transactions.
 
 
-Class:	cscie160.hw5.ATMImpl
+Class:	cscie160.project.ATMImpl
 	This class is the remote implementation of the ATM interface.  It extends
-UnicastRemoteObject.  It has a HashMap of Account objects, where the integer
-account number is the key.
+UnicastRemoteObject.  It no longer has account objects.  Instead it has 
+references to the Bank and Security services.  The security service is used to 
+make sure that the PIN for the account is correct and that the operation is 
+authorized for that account.  The bank service actually performs the operations
+on the specified accounts.  This class now also has to keep track of how much 
+cash on hand it has as well as all the clients that have registered with it.
 
 Method: Constructor
-	In addition to calling the parent constructor, the constructor also 
-populates the HashMap with the initial values specified in the assignment.
+	The constructor has five tasks.  It calls the ancestor object's constructor.
+It initializes the cash on hand to be $500, and it initializes the Vector that
+will hold references to all the clients that register.  Lastly it will 
+initialize references to the remote Bank and Security services.
 
-Method: deposit (int acctNum, float amount)
-	This method retrieves the account referenced and adds the amount specified
-to the balance of that account.
+Method: deposit (AccountInfo acctInfo, float amount)
+	First this method will create a transaction notification object that 
+summarizes the deposit transaction, and with that the notifyListeners method is
+called.  Then the security service methods are called; first authenticate, and
+then authorize.  If either of those fail, exceptions will be thrown so the rest
+of the method won't be performed.  If both of those security checks pass, then
+the deposit method on the Bank service will be called, and a message will be 
+displayed to sysout.
 
-Method: withdraw (int acctNum, float amount)
-	This method retrieves the account referenced and subtracts the amount 
-specified from the balance of that account.
+Method: withdraw (AccountInfo acctInfo, float amount)
+	Similar to the deposit method, this method will first call the
+notifyListeners method, the security service methods, and then the withdraw 
+method on the Bank service.  Before it calls the withdraw method, it will check
+that the ATM has enough cash on hand for the withdrawal.  If there is not, it
+will throw the InsufficientFundsException.
 
-Method: getBalance (int acctNum)
-	This method returns the balance of the referenced account.
+Method: getBalance (AccountInfo acctInfo)
+	Similar to the deposit method, this method will first call the
+notifyListeners method, the security service methods, and then the getBalance 
+method on the Bank service, returning the result from that.
+
+Method:	transfer (AccountInfo acctFromInfo, AccountInfo acctToInfo, float amount)
+	The transfer method is more complicated because to accounts are involved, 
+the account money is being transferred from and the one it's going to.  The 
+TransactionNotification object that is created is special because it involves
+the two accounts, and there is a special flag for that object to indicate it is
+a transfer.  Once that is passed to the notifyListeners method, the authenticate
+and authorize methods must be called for both accounts.  Similar to the withdraw
+method, this method must ensure that the amount being transferred can be covered
+by the account it is being taken from.  If it can't, then it throws the 
+InsufficientFundsException.  If there is enough money in the from account, then
+the transfer method is called on the Bank service.
+
+Method:	registerListener (ATMListener atmListener)
+	This new method of the ATM interface simply takes the reference to the 
+listener object, and adds it to the Vector of listener references.
+
+Method:	notifyListeners (TransactionNotification txNotif)
+	This method simply loops through the collection of listener objects, and 
+calls the transactionNotify method on each of them, passing along the 
+notification object passed in. 
 
 
-Interface:	cscie160.hw5.ATMFactory
+Class:	cscie160.project.TransactionNotification
+	This class encapsulates a transaction, including the account(s) involved and
+the type of operation being requested.
+
+
+Enum:	cscie160.project.TransactionType
+	This enum has three members, DEPOSIT, WITHDRAW, and BALANCE.  It is used to 
+help identify what kind of operation is being requested.
+
+
+Interface:	cscie160.project.ATMListener
+	This new interface simply has one method, transactionNotify.  Client classes
+must implement this interface and register themselves with the ATM remote 
+reference.
+
+
+Interface:	cscie160.project.ATMFactory
 	This remote interface extends java.rmi.Remote and it has one method (getATM)
 that returns a remote reference to an ATM object.
 
 
-Class:	cscie160.hw5.ATMFactoryImpl
+Class:	cscie160.project.ATMFactoryImpl
 
 Method: Constructor
 	The no arg constructor binds a reference of a remote ATM object to 
@@ -57,15 +140,71 @@ Method: Constructor
 
 Method: getATM
 	This method does a lookup for the remote ATM object and returns it.
+	
+	
+Interface: cscie160.project.Bank
+	This remote interface defines the three operations that can be performed on
+a bank, deposit, withdraw, and get balance.  Each method requires an AccountInfo
+object to specify which account is being operated on.
 
 
-Class:	cscie160.hw5.Server
+Class:	cscie160.project.BankImpl
+	This class implements the Bank interface and all three methods on it.  The 
+constructor method initializes the three account objects and adds them to a 
+HashMap object.  The three methods all behave pretty similarly in that they get
+the specific account object from the HashMap, and then call the corresponding 
+operational method on the account (e.g. deposit).  Since the ATM service has 
+already done the authentication and authorization, it is not necesary to check 
+it again.
+
+
+Interface:	cscie160.project.Security
+	This interface defines two remote methods, authenticate and authorize.  The
+authenticate method will validate the given PIN for an account, and authorize
+will ensure that the specified operation is allowed on the given account.
+
+
+Class:	cscie160.project.SecurityImpl
+	This class has a constructor that creates two HashMaps.  One is for holding
+account PIN information for authentication, and the other is for authorization
+information.  The authenticate and authorize methods will use those for 
+determining the approrpriate response.
+
+
+Class:	cscie160.project.SecurityException
+	This exception is used to indicate that there was either an authentication 
+or authorization problem.  The string message it contains will give a message
+about the specifics.
+
+
+Class:	cscie160.project.InsufficientFundsException
+	This exception class is used to indicate that either an account or an ATM 
+doesn't have enough cash to support a withdrawal or transfer out of an account.
+
+
+Class:	cscie160.project.Server
 	The Server class is a simple command line that binds the ATMFactory class so
 that the client can get a reference to it, and then get a reference to a remote
-ATM instace.
+ATM instance.
 
 
-Class:	cscie160.hw5.AccountTest
+Class:	cscie160.project.BankServer
+	Similar to the Server class, this class binds the Security and Bank services
+to the RMI registry so the ATM can get access to them.
+
+
+Class:	cscie160.project.Client
+	The client class that drives the demonstration of the behaviors of the 
+system has some special features.  It now implements the ATMListener interface
+so it can be notified of some transaction about to take place.  In order to 
+register with the ATM, it must call the registerListener method.  Since most 
+of the code for the client is run out of the static main method, an instance of
+the client must be instantiated so "this" can be passed to the registerListener
+method.  Much of the code for the client is otherwise provided in the 
+assignment web site page.
+
+
+Class:	cscie160.project.AccountTest
 	This class has two test methods that test getting the balance and setting 
 the balance.
 
@@ -79,7 +218,7 @@ Method:	testSetBalance
 validate that it was set correctly.
 
 
-Class:	cscie160.hw5.ATMImplTest
+Class:	cscie160.project.ATMImplTest
 	This class has two methods to test the ATMImpl class.  In testing the 
 deposit and withdraw operations, we also rely on the get balance method, so that
 is tested with the other two operations.
@@ -93,11 +232,3 @@ Method:	testWithdraw
 class.
 
 
-Submission Notes:
-	I only wrote JUnit tests for the Account class and the ATMImpl class.  The
-server class does not need to be running anymore for the tests to work.  I kept
-the ant script from before, but added a demo target.  The demo target will spawn 
-off the rmiregistry process, run the Server class, and then run the client
-class.  If you run the demo target, you won't be able to subsequently run the 
-clean target since the rmiregistry process will have a hold on the HW5.jar.  If
-you kill that process, then you'll be able to run the clean target again.

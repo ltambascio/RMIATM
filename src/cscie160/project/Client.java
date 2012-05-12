@@ -1,5 +1,6 @@
 package cscie160.project;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -11,17 +12,18 @@ import java.rmi.UnknownHostException;
  * 
  * @author	Charles Sawyer
  * @author	Larry Tambascio 
- * @version	1.0
+ * @version	1.2
  */
-public class Client
+public class Client implements ATMListener, Serializable
 {
+	
 	public static void main(String[] args)
 	{
 		ATM atm = null;
+		
 		try
 		{
-			ATMFactory factory = (ATMFactory) Naming.lookup(
-					"//localhost/atmfactory");
+			ATMFactory factory = (ATMFactory) Naming.lookup("//localhost/atmfactory");
 			atm = factory.getATM();
 		}
 		catch (MalformedURLException mue)
@@ -40,50 +42,143 @@ public class Client
 		{
 			re.printStackTrace();
 		}
-		if (atm != null)
+		
+		Client client = new Client();
+		
+		try
 		{
-			try
-			{
-				// get initial account balance
-				System.out.println("Initial Balances");
-				System.out.println("Balance(0000001): "
-						+ atm.getBalance(0000001));
-				System.out.println("Balance(0000002): "
-						+ atm.getBalance(0000002));
-				System.out.println("Balance(0000003): "
-						+ atm.getBalance(0000003));
-				System.out.println();
-				// make $1000 depoist in account 0000001 and get new balance
-				System.out.println("Depositting(0000001): 1000 ");
-				atm.deposit(0000001, 1000);
-				System.out.println("Balance(0000001): "
-						+ atm.getBalance(0000001));
-				// make $100 withdrawal from account 0000002 and get new balance
-				System.out.println("Withdrawing(0000002): 100 ");
-				atm.withdraw(0000002, 100);
-				System.out.println("Balance(0000002): "
-						+ atm.getBalance(0000002));
-				// make $500 deposit in account 0000003 and get new balance
-				System.out.println("Depositting(0000003): 500 ");
-				atm.deposit(0000003, 500);
-				System.out.println("Balance(0000003): "
-						+ atm.getBalance(0000003));
-				// get final account balance
-				System.out.println();
-				System.out.println("Final Balances");
-				System.out.println("Balance(0000001): "
-						+ atm.getBalance(0000001));
-				System.out.println("Balance(0000002): "
-						+ atm.getBalance(0000002));
-				System.out.println("Balance(0000003): "
-						+ atm.getBalance(0000003));
-			}
-			catch (RemoteException re)
-			{
-				System.out
-						.println("An exception occurred while communicating with the ATM");
-				re.printStackTrace();
-			}
+			atm.registerListener(client);
+		}
+		catch (RemoteException re)
+		{
+			// TODO Auto-generated catch block
+			re.printStackTrace();
+		}
+		catch (SecurityException se)
+		{
+			// TODO Auto-generated catch block
+			se.printStackTrace();
+		}
+		
+		testATM(atm);
+	}
+	
+	/**
+	 * Method that gets invoked when a transaction is about to happen.
+	 * 
+	 * @param	txNotif		Notification object with details about the transaction.
+	 */
+	@Override
+	public void transactionNotify(TransactionNotification txNotif)
+	{
+		System.out.println(txNotif);
+	}
+	
+	/**
+	 * Helper method for creating AccountInfo objects.
+	 * 
+	 * @param	acctNum		Account number
+	 * @param	acctPin		PIN for the specific account
+	 * @return	AccountInfo object
+	 */
+	private static AccountInfo getAccountInfo(int acctNum, int acctPin)
+	{
+		return new AccountInfo(acctNum, acctPin);
+	}
+
+	public static void testATM(ATM atm)
+	{
+		if (atm!=null)
+		{
+			printBalances(atm);
+			performTestOne(atm);
+			performTestTwo(atm);
+			performTestThree(atm);
+			performTestFour(atm);
+			performTestFive(atm);
+			performTestSix(atm);
+			performTestSeven(atm);
+			performTestEight(atm);
+			performTestNine(atm);
+			printBalances(atm);
+		}
+	}
+	
+	public static void printBalances(ATM atm) 
+	{        
+		try
+		{
+			System.out.println("Balance(0000001): "+atm.getBalance(getAccountInfo(0000001, 1234)));
+			System.out.println("Balance(0000002): "+atm.getBalance(getAccountInfo(0000002, 2345)));
+			System.out.println("Balance(0000003): "+atm.getBalance(getAccountInfo(0000003, 3456)));
+		} 
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public static void performTestOne(ATM atm) {       
+		try {
+			atm.getBalance(getAccountInfo(0000001, 5555));
+		} catch (Exception e) {
+			System.out.println("Failed as expected: "+e);
+		}
+	}
+	public static void performTestTwo(ATM atm) {       
+		try {
+			atm.withdraw(getAccountInfo(0000002, 2345), 500);
+		} catch (Exception e) {
+			System.out.println("Failed as expected: "+e);
+		}
+	}
+	public static void performTestThree(ATM atm) {        
+		try {
+			atm.withdraw(getAccountInfo(0000001, 1234), 50);
+		} catch (Exception e) {
+			System.out.println("Failed as expected: "+e);
+		}
+	}
+	public static void performTestFour(ATM atm) {         
+		try {
+			atm.deposit(getAccountInfo(0000001, 1234), 500);
+		} catch (Exception e) {
+			System.out.println("Unexpected error: "+e);
+		}
+	}
+	public static void performTestFive(ATM atm) {         
+		try {
+			atm.deposit(getAccountInfo(0000002, 2345), 100);
+		} catch (Exception e) {
+			System.out.println("Unexpected error: "+e);
+		}
+	}
+	public static void performTestSix(ATM atm) {       
+		try {
+			atm.withdraw(getAccountInfo(0000001, 1234), 100);
+		} catch (Exception e) {
+			System.out.println("Unexpected error: "+e);
+		}
+	}
+	public static void performTestSeven(ATM atm) {        
+		try {
+			atm.withdraw(getAccountInfo(0000003, 3456), 300);
+		} catch (Exception e) {
+			System.out.println("Unexpected error: "+e);
+		}
+	}
+	public static void performTestEight(ATM atm) {        
+		try {
+			atm.withdraw(getAccountInfo(0000001, 1234), 200);
+		} catch (Exception e) {
+			System.out.println("Failed as expected: "+e);
+		}
+	}
+	public static void performTestNine(ATM atm) {        
+		try {
+			atm.transfer(getAccountInfo(0000001, 1234),getAccountInfo(0000002, 2345), 100);
+		} catch (Exception e) {
+			System.out.println("Unexpected error: "+e);
 		}
 	}
 }
